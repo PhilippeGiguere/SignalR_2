@@ -36,8 +36,13 @@ export default function ChatComponent({ hubConnection, onConnected }: ChatCompon
     });
 
     // TODO: Écouter le message pour mettre à jour la liste de channels
-
+  hubConnection!.on('ChannelsList', (data) => {
+      setChannelsList(data);
+    });
     // TODO: Écouter le message pour quitter un channel (lorsque le channel est effacé)
+ hubConnection!.on('LeaveChannel', (message) => {
+      setSelectedChannel(null);
+    });
 
     // Tous les handlers sont enregistrés : on peut maintenant démarrer la connexion.
     if (hubConnection.state === HubConnectionState.Disconnected) {
