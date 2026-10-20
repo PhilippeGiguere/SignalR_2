@@ -21,7 +21,12 @@ export default function ChatComponent({ hubConnection, onConnected }: ChatCompon
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserEntry | null>(null);
 
-  // Configuration des listeners SignalR quand hubConnection change
+  // Configuration des listeners SignalR quand hubConnection change.
+  // IMPORTANT: on enregistre tous les .on(...) AVANT d'appeler .start().
+  // Si on démarrait la connexion avant, le serveur pourrait envoyer un
+  // message (ex: OnConnectedAsync) dès l'ouverture du transport, avant que
+  // ce useEffect ait eu la chance de s'exécuter et d'enregistrer les
+  // handlers : le message serait alors perdu silencieusement.
   useEffect(() => {
     if (!hubConnection) return;
 
@@ -35,12 +40,13 @@ export default function ChatComponent({ hubConnection, onConnected }: ChatCompon
       setMessages(prev => [...prev, msg]);
     });
 
-    // TODO: Écouter le message pour mettre à jour la liste de channels
-  hubConnection!.on('ChannelsList', (data) => {
+    // Écouter le message pour mettre à jour la liste de channels
+    hubConnection.on('ChannelsList', (data) => {
       setChannelsList(data);
     });
-    // TODO: Écouter le message pour quitter un channel (lorsque le channel est effacé)
- hubConnection!.on('LeaveChannel', (message) => {
+
+    // Écouter le message pour quitter un channel (lorsque le channel est effacé)
+    hubConnection.on('LeaveChannel', (message) => {
       setSelectedChannel(null);
     });
 
@@ -58,6 +64,8 @@ export default function ChatComponent({ hubConnection, onConnected }: ChatCompon
     return () => {
       hubConnection.off('UsersList');
       hubConnection.off('NewMessage');
+      hubConnection.off('ChannelsList');
+      hubConnection.off('LeaveChannel');
     };
   }, [hubConnection, onConnected]);
 
@@ -89,11 +97,13 @@ export default function ChatComponent({ hubConnection, onConnected }: ChatCompon
   function createChannel(e: React.FormEvent) {
     e.preventDefault();
     // TODO: Ajouter un invoke pour créer un canal
+    hubConnection!.invoke('CreateChannel', newChannelName);
     setNewChannelName('');
   }
 
   function deleteChannel(channel: Channel) {
     // TODO: Ajouter un invoke pour supprimer un canal
+    hubConnection!.invoke('DeleteChannel', channel.id);
   }
 
   function leaveChannel() {
