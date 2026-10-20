@@ -46,7 +46,7 @@ namespace signalr.backend.Hubs
         {
             if (!UserHandler.UserConnections.ContainsKey(CurentUser.UserName!))
             {
-                UserHandler.UserConnections[CurentUser.UserName!] = new UserData() { UserId = Context.UserIdentifier! };
+                UserHandler.UserConnections[CurentUser.UserName!] = new UserData(){UserId = Context.UserIdentifier!};
             }
             UserHandler.UserConnections[CurentUser.UserName!].NbConnexions++;
         }
@@ -62,7 +62,7 @@ namespace signalr.backend.Hubs
         public async override Task OnConnectedAsync()
         {
             AugmenterNbConnexions();
-
+            
 
             // TODO: Envoyer des message aux clients pour les mettre à jour
             await Clients.All.SendAsync("UsersList", UserHandler.UserConnections.ToList());
@@ -90,7 +90,7 @@ namespace signalr.backend.Hubs
         {
             Channel channel = _context.Channel.Find(channelId);
 
-            if (channel != null)
+            if(channel != null)
             {
                 _context.Channel.Remove(channel);
                 await _context.SaveChangesAsync();
@@ -100,7 +100,7 @@ namespace signalr.backend.Hubs
                 await Clients.Group(groupName).SendAsync("NewMessage", "[" + channel.Title + "] a été détruit");
                 await Clients.Group(groupName).SendAsync("LeaveChannel");
                 await Clients.All.SendAsync("ChannelsList", await _context.Channel.ToListAsync());
-            }
+            }       
         }
 
         public async Task JoinChannel(int oldChannelId, int newChannelId)
