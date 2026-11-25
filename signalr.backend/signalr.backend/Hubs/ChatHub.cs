@@ -131,6 +131,7 @@ namespace signalr.backend.Hubs
 
         public async Task SendMessage(string message, int channelId, string userId)
         {
+            
             if (userId != null)
             {
                 // TODO: Envoyer le message à cet utilisateur
@@ -142,15 +143,20 @@ namespace signalr.backend.Hubs
                 // TODO: Envoyer le message aux utilisateurs connectés à ce canal
                 string groupName = CreateChannelGroupName(channelId);
                 Channel channel = _context.Channel.Find(channelId);
+                channel.NbMessages++;
+                await _context.SaveChangesAsync();
                 await Clients.Group(groupName).SendAsync("NewMessage", "[" + channel.Title + "] " + message);
             }
             else
             {
                 await Clients.All.SendAsync("NewMessage", "[Tous] " + message);
             }
+            
+            
+            
         }
 
-        private static string CreateChannelGroupName(int channelId)
+        public static string CreateChannelGroupName(int channelId)
         {
             return "Channel" + channelId;
         }
